@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react'
-import './App.css'
+import { useMemo, useState } from 'react';
+import './App.css';
 
 const masterPages = [
   { id: 'particulars', label: 'Particulars' },
   { id: 'msp', label: 'MSP' },
   { id: 'incidental', label: 'Incidental Rate' },
-]
+];
 
 const particularsRows = [
   { id: '01', particular: 'Gunny handling and stitching' },
@@ -13,37 +13,61 @@ const particularsRows = [
   { id: '03', particular: 'Weighment and quality certification' },
   { id: '04', particular: 'Loading and unloading support' },
   { id: '05', particular: 'Insurance and administrative overhead' },
-]
+];
 
 const mspRows = [
-  { commodity: 'Paddy (Common)', season: 'Kharif 2025-26', rate: 'Rs. 2,300 / Qtl' },
+  {
+    commodity: 'Paddy (Common)',
+    season: 'Kharif 2025-26',
+    rate: 'Rs. 2,300 / Qtl',
+  },
   { commodity: 'Wheat', season: 'Rabi 2025-26', rate: 'Rs. 2,425 / Qtl' },
   { commodity: 'Mustard', season: 'Rabi 2025-26', rate: 'Rs. 5,950 / Qtl' },
   { commodity: 'Chana', season: 'Rabi 2025-26', rate: 'Rs. 5,650 / Qtl' },
-]
+];
 
 const incidentalRows = [
-  { particular: 'Bagging and stitching', season: 'Kharif 2025-26', rate: 'Rs. 24.00 / Qtl' },
-  { particular: 'Cleaning and drying', season: 'Kharif 2025-26', rate: 'Rs. 18.50 / Qtl' },
-  { particular: 'Handling and stacking', season: 'Rabi 2025-26', rate: 'Rs. 16.75 / Qtl' },
-  { particular: 'Watch and ward', season: 'Rabi 2025-26', rate: 'Rs. 11.20 / Qtl' },
-]
+  {
+    particular: 'Bagging and stitching',
+    season: 'Kharif 2025-26',
+    rate: 'Rs. 24.00 / Qtl',
+  },
+  {
+    particular: 'Cleaning and drying',
+    season: 'Kharif 2025-26',
+    rate: 'Rs. 18.50 / Qtl',
+  },
+  {
+    particular: 'Handling and stacking',
+    season: 'Rabi 2025-26',
+    rate: 'Rs. 16.75 / Qtl',
+  },
+  {
+    particular: 'Watch and ward',
+    season: 'Rabi 2025-26',
+    rate: 'Rs. 11.20 / Qtl',
+  },
+];
 
 const options = {
   season: ['Kharif 2025-26', 'Rabi 2025-26'],
   commodity: ['Paddy (Common)', 'Wheat', 'Mustard'],
   state: ['Madhya Pradesh', 'Punjab', 'Haryana'],
-  particular: ['Bagging and stitching', 'Cleaning and drying', 'Handling and stacking'],
-}
+  particular: [
+    'Bagging and stitching',
+    'Cleaning and drying',
+    'Handling and stacking',
+  ],
+};
 
 const derivedValues = {
   approvedRate: 'Rs. 24.00 / Qtl',
   approvalAmount: 'Rs. 31,200.00',
-}
+};
 
 function Sidebar({ activePage, setActivePage }) {
-  const [mastersOpen, setMastersOpen] = useState(true)
-  const [stockBlockingOpen, setStockBlockingOpen] = useState(true)
+  const [mastersOpen, setMastersOpen] = useState(true);
+  const [stockBlockingOpen, setStockBlockingOpen] = useState(true);
 
   return (
     <aside className="sidebar">
@@ -100,20 +124,29 @@ function Sidebar({ activePage, setActivePage }) {
         ) : null}
       </nav>
     </aside>
-  )
+  );
 }
 
-function MasterPage({ title, subtitle, searchPlaceholder, addLabel, columns, rows }) {
-  const [search, setSearch] = useState('')
+function MasterPage({
+  title,
+  subtitle,
+  searchPlaceholder,
+  addLabel,
+  columns,
+  rows,
+}) {
+  const [search, setSearch] = useState('');
 
   const filteredRows = useMemo(() => {
-    const value = search.trim().toLowerCase()
-    if (!value) return rows
+    const value = search.trim().toLowerCase();
+    if (!value) return rows;
 
     return rows.filter((row) =>
-      Object.values(row).some((cell) => String(cell).toLowerCase().includes(value)),
-    )
-  }, [rows, search])
+      Object.values(row).some((cell) =>
+        String(cell).toLowerCase().includes(value),
+      ),
+    );
+  }, [rows, search]);
 
   return (
     <section className="page-shell master-shell">
@@ -166,7 +199,7 @@ function MasterPage({ title, subtitle, searchPlaceholder, addLabel, columns, row
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 function StoreIncidentalPage() {
@@ -180,22 +213,22 @@ function StoreIncidentalPage() {
     paidByHo: '',
     pendingAmount: '',
     remark: '',
-  })
+  });
 
   const isReadyForAmounts = Boolean(
     formValues.season &&
-      formValues.commodity &&
-      formValues.state &&
-      formValues.particular &&
-      formValues.procurementQuality.trim(),
-  )
+    formValues.commodity &&
+    formValues.state &&
+    formValues.particular &&
+    formValues.procurementQuality.trim(),
+  );
 
   const handleChange = (key, value) => {
     setFormValues((current) => ({
       ...current,
       [key]: value,
-    }))
-  }
+    }));
+  };
 
   return (
     <section className="page-shell block-shell">
@@ -204,8 +237,9 @@ function StoreIncidentalPage() {
           <p className="page-kicker">Stock Blocking</p>
           <h2>Store Incidental</h2>
           <p className="page-subtitle">
-            Fill the core selection fields first. Once complete, the approved and user-entry
-            incidental values appear below, following the stock blocking workflow style.
+            Fill the core selection fields first. Once complete, the approved
+            and user-entry incidental values appear below, following the stock
+            blocking workflow style.
           </p>
         </div>
       </div>
@@ -277,13 +311,15 @@ function StoreIncidentalPage() {
       </div>
 
       <div className="procurement-card">
-        <label htmlFor="procurementQuality">Procurement Quality</label>
+        <label htmlFor="procurementQuality">Procurement Quantity</label>
         <input
           id="procurementQuality"
           type="text"
           value={formValues.procurementQuality}
-          onChange={(event) => handleChange('procurementQuality', event.target.value)}
-          placeholder="Enter procurement quality"
+          onChange={(event) =>
+            handleChange('procurementQuality', event.target.value)
+          }
+          placeholder="Enter procurement quantity"
         />
       </div>
 
@@ -292,7 +328,10 @@ function StoreIncidentalPage() {
           <div className="results-header">
             <div>
               <h3>Incidental Details</h3>
-              <p>Approved values are prefilled from the master setup, while the remaining fields are available for user input.</p>
+              <p>
+                Approved values are prefilled from the master setup, while the
+                remaining fields are available for user input.
+              </p>
             </div>
             <div className="results-chip">Selection Complete</div>
           </div>
@@ -313,7 +352,9 @@ function StoreIncidentalPage() {
               <label>Incidental Amount Claimed by BO</label>
               <input
                 value={formValues.claimedByBo}
-                onChange={(event) => handleChange('claimedByBo', event.target.value)}
+                onChange={(event) =>
+                  handleChange('claimedByBo', event.target.value)
+                }
                 placeholder="Enter BO claimed amount"
               />
             </div>
@@ -322,7 +363,9 @@ function StoreIncidentalPage() {
               <label>Incidental Amount Paid by HO</label>
               <input
                 value={formValues.paidByHo}
-                onChange={(event) => handleChange('paidByHo', event.target.value)}
+                onChange={(event) =>
+                  handleChange('paidByHo', event.target.value)
+                }
                 placeholder="Enter HO paid amount"
               />
             </div>
@@ -331,7 +374,9 @@ function StoreIncidentalPage() {
               <label>Incidental Amount Pending</label>
               <input
                 value={formValues.pendingAmount}
-                onChange={(event) => handleChange('pendingAmount', event.target.value)}
+                onChange={(event) =>
+                  handleChange('pendingAmount', event.target.value)
+                }
                 placeholder="Enter pending amount"
               />
             </div>
@@ -355,19 +400,19 @@ function StoreIncidentalPage() {
         </div>
       ) : (
         <div className="empty-state">
-          <h3>Complete the top fields to continue</h3>
+          {/* <h3>Complete the top fields to continue</h3>
           <p>
             Select season, commodity, state, particulars, and enter procurement quality to
             reveal the incidental detail section.
-          </p>
+          </p> */}
         </div>
       )}
     </section>
-  )
+  );
 }
 
 function App() {
-  const [activePage, setActivePage] = useState('store-incidental')
+  const [activePage, setActivePage] = useState('store-incidental');
 
   return (
     <div className="app-shell">
@@ -421,7 +466,7 @@ function App() {
         {activePage === 'store-incidental' ? <StoreIncidentalPage /> : null}
       </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
