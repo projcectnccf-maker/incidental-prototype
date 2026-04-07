@@ -821,6 +821,7 @@ function ReportsPage() {
               handleFilterChange('season', event.target.value)
             }
           >
+            <option value="">Select Season</option>
             {reportOptions.season.map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -838,6 +839,7 @@ function ReportsPage() {
               handleFilterChange('commodity', event.target.value)
             }
           >
+            <option value="">Select Commodity</option>
             {reportOptions.commodity.map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -855,6 +857,7 @@ function ReportsPage() {
               handleFilterChange('branch', event.target.value)
             }
           >
+            <option value="">Select Branch</option>
             {reportOptions.branch.map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -872,6 +875,7 @@ function ReportsPage() {
               handleFilterChange('state', event.target.value)
             }
           >
+            <option value="">Select State</option>
             {reportOptions.state.map((option) => (
               <option key={option} value={option}>
                 {option}
