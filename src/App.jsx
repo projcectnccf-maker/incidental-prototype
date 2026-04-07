@@ -28,7 +28,7 @@ const mspRows = [
 
 const incidentalRows = [
   {
-    particular: 'Bagging and stitching',
+    particular: 'Transportation',
     season: 'Kharif 2025-26',
     rate: 'Rs. 24.00 / Qtl',
   },
@@ -49,15 +49,107 @@ const incidentalRows = [
   },
 ];
 
+const reportRows = [
+  {
+    particular: 'Transportation Labour Charges (Per Qtl)',
+    rate: 55.89,
+    approvedAmount: 158871963.9,
+    claimedByBo: 79543658.15,
+    paidByHo: 79543658.15,
+    pending: 0,
+    remark: '',
+  },
+  {
+    particular: 'Packaging Material (Per Qtl) including GST',
+    rate: 52.86,
+    approvedAmount: 150258937.4,
+    claimedByBo: 75316700.5,
+    paidByHo: 75316700.5,
+    pending: 0,
+    remark: '',
+  },
+  {
+    particular: 'Gunny Bags Transportation',
+    rate: 107.59,
+    approvedAmount: 305833505,
+    claimedByBo: 155799682.6,
+    paidByHo: 155799682.6,
+    pending: 0,
+    remark: '',
+  },
+  {
+    particular: 'GST on MSP',
+    rate: 244.6,
+    approvedAmount: 695295801.8,
+    claimedByBo: 116034969.6,
+    paidByHo: 116034969.6,
+    pending: 0,
+    remark: '',
+  },
+  {
+    particular: 'NCCF Service Charges',
+    rate: 48.92,
+    approvedAmount: 139059160.4,
+    claimedByBo: 104435742.3,
+    paidByHo: 104435742.3,
+    pending: 0,
+    remark: '',
+  },
+  {
+    particular: 'SLA Services Charges',
+    rate: 97.84,
+    approvedAmount: 278118320.7,
+    claimedByBo: 139247656.4,
+    paidByHo: 139247656.4,
+    pending: 0,
+    remark: '',
+  },
+  {
+    particular: 'Godown Insurance',
+    rate: 7.34,
+    approvedAmount: 20864559.22,
+    claimedByBo: 0,
+    paidByHo: 0,
+    pending: 0,
+    remark: '',
+  },
+  {
+    particular: 'Godown Rent for 9 Months (Per Qtl)',
+    rate: 153.3,
+    approvedAmount: 435767973.9,
+    claimedByBo: 261644410.7,
+    paidByHo: 261644410.7,
+    pending: 0,
+    remark: '',
+  },
+  {
+    particular: 'QR Tag',
+    rate: 3.58,
+    approvedAmount: 10176447.14,
+    claimedByBo: 0,
+    paidByHo: 0,
+    pending: 0,
+    remark: '',
+  },
+];
+
 const options = {
   season: ['Kharif 2025-26', 'Rabi 2025-26'],
   commodity: ['Paddy (Common)', 'Wheat', 'Mustard'],
   state: ['Madhya Pradesh', 'Punjab', 'Haryana'],
+  branch: ['Ahmedabad', 'Delhi', 'Mumbai'],
   particular: [
     'Bagging and stitching',
     'Cleaning and drying',
     'Handling and stacking',
   ],
+};
+
+const reportOptions = {
+  season: ['Kharif 2024-25', 'Rabi 2024-25', 'Kharif 2025-26'],
+  commodity: ['Soyabean MSP 4892 per Qntl', 'Paddy MSP 2300 per Qntl'],
+  state: ['Maharashtra', 'Madhya Pradesh', 'Rajasthan'],
+  branch: ['BO Nagpur', 'BO Nashik', 'BO Amravati'],
 };
 
 function Sidebar({ activePage, setActivePage }) {
@@ -103,7 +195,7 @@ function Sidebar({ activePage, setActivePage }) {
           className="sidebar-group"
           onClick={() => setStockBlockingOpen((value) => !value)}
         >
-          <span>Stock Blocking</span>
+          <span>Incidental</span>
           <span>{stockBlockingOpen ? '▴' : '▾'}</span>
         </button>
         {stockBlockingOpen ? (
@@ -114,6 +206,13 @@ function Sidebar({ activePage, setActivePage }) {
               onClick={() => setActivePage('store-incidental')}
             >
               Store Incidental
+            </button>
+            <button
+              type="button"
+              className={`sidebar-link ${activePage === 'reports' ? 'active' : ''}`}
+              onClick={() => setActivePage('reports')}
+            >
+              Reports
             </button>
           </div>
         ) : null}
@@ -203,6 +302,7 @@ function StoreIncidentalPage() {
     season: '',
     commodity: '',
     state: '',
+    branch: '',
     procurementQuality: '',
   });
   const [detailRows, setDetailRows] = useState([
@@ -221,6 +321,7 @@ function StoreIncidentalPage() {
     formValues.season &&
     formValues.commodity &&
     formValues.state &&
+    formValues.branch &&
     formValues.procurementQuality.trim(),
   );
   const isBranchUser = activeRole === 'branch';
@@ -238,17 +339,23 @@ function StoreIncidentalPage() {
     })}`;
 
   const getApprovedRate = (particular) => {
-    const matchedRow = incidentalRows.find((row) => row.particular === particular);
+    const matchedRow = incidentalRows.find(
+      (row) => row.particular === particular,
+    );
     return matchedRow?.rate ?? '--';
   };
 
   const getApprovalAmount = (particular) => {
     if (!particular) return 'Rs. 0.00';
 
-    const procurementQuantity = Number.parseFloat(formValues.procurementQuality);
+    const procurementQuantity = Number.parseFloat(
+      formValues.procurementQuality,
+    );
     if (!Number.isFinite(procurementQuantity)) return 'Rs. 0.00';
 
-    return formatCurrency(parseRate(getApprovedRate(particular)) * procurementQuantity);
+    return formatCurrency(
+      parseRate(getApprovedRate(particular)) * procurementQuantity,
+    );
   };
 
   const handleChange = (key, value) => {
@@ -267,16 +374,16 @@ function StoreIncidentalPage() {
   const handleAddRow = () => {
     setDetailRows((current) => [
       ...current,
-        {
-          id: current.length ? Math.max(...current.map((row) => row.id)) + 1 : 1,
-          particular: '',
-          claimedByBo: '',
-          paidByHo: '',
-          pendingAmount: '',
-          remark: '',
-          attachmentName: '',
-        },
-      ]);
+      {
+        id: current.length ? Math.max(...current.map((row) => row.id)) + 1 : 1,
+        particular: '',
+        claimedByBo: '',
+        paidByHo: '',
+        pendingAmount: '',
+        remark: '',
+        attachmentName: '',
+      },
+    ]);
   };
 
   const handleFileChange = (id, file) => {
@@ -300,8 +407,8 @@ function StoreIncidentalPage() {
           <p className="page-kicker">Stock Blocking</p>
           <h2>Store Incidental</h2>
           <p className="page-subtitle">
-            Fill the core selection fields first. Once complete, add one or
-            more incidental detail rows with particulars and row-wise values.
+            Fill the core selection fields first. Once complete, add one or more
+            incidental detail rows with particulars and row-wise values.
           </p>
         </div>
         <div className="role-switcher" aria-label="User role switcher">
@@ -372,6 +479,22 @@ function StoreIncidentalPage() {
         </div>
 
         <div className="filter-item">
+          <label htmlFor="branch">Branch</label>
+          <select
+            id="branch"
+            value={formValues.branch}
+            onChange={(event) => handleChange('branch', event.target.value)}
+          >
+            <option value="">Select Branch</option>
+            {options.branch.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-item">
           <label htmlFor="procurementQuality">Procurement Quantity</label>
           <input
             id="procurementQuality"
@@ -432,7 +555,11 @@ function StoreIncidentalPage() {
                           value={row.particular}
                           disabled={isHoUser}
                           onChange={(event) =>
-                            handleRowChange(row.id, 'particular', event.target.value)
+                            handleRowChange(
+                              row.id,
+                              'particular',
+                              event.target.value,
+                            )
                           }
                         >
                           <option value="">Select Particulars</option>
@@ -450,7 +577,11 @@ function StoreIncidentalPage() {
                           value={row.claimedByBo}
                           readOnly={isHoUser}
                           onChange={(event) =>
-                            handleRowChange(row.id, 'claimedByBo', event.target.value)
+                            handleRowChange(
+                              row.id,
+                              'claimedByBo',
+                              event.target.value,
+                            )
                           }
                           placeholder="Enter BO claimed amount"
                         />
@@ -460,7 +591,11 @@ function StoreIncidentalPage() {
                           <input
                             value={row.paidByHo}
                             onChange={(event) =>
-                              handleRowChange(row.id, 'paidByHo', event.target.value)
+                              handleRowChange(
+                                row.id,
+                                'paidByHo',
+                                event.target.value,
+                              )
                             }
                             placeholder="Enter HO paid amount"
                           />
@@ -471,7 +606,11 @@ function StoreIncidentalPage() {
                           <input
                             value={row.pendingAmount}
                             onChange={(event) =>
-                              handleRowChange(row.id, 'pendingAmount', event.target.value)
+                              handleRowChange(
+                                row.id,
+                                'pendingAmount',
+                                event.target.value,
+                              )
                             }
                             placeholder="Enter pending amount"
                           />
@@ -482,7 +621,11 @@ function StoreIncidentalPage() {
                           value={row.remark}
                           readOnly={isHoUser}
                           onChange={(event) =>
-                            handleRowChange(row.id, 'remark', event.target.value)
+                            handleRowChange(
+                              row.id,
+                              'remark',
+                              event.target.value,
+                            )
                           }
                           placeholder="Add remark"
                           rows="3"
@@ -537,8 +680,271 @@ function StoreIncidentalPage() {
         <div className="empty-state">
           <h3>Complete the top fields to continue</h3>
           <p>
-            Select season, commodity, state, and enter procurement quantity to
-            reveal the incidental details table.
+            Select season, commodity, state, branch, and enter procurement
+            quantity to reveal the incidental details table.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ReportsPage() {
+  const [filters, setFilters] = useState({
+    season: '',
+    commodity: '',
+    state: '',
+    branch: '',
+  });
+
+  const isReadyForReport = Boolean(
+    filters.season && filters.commodity && filters.state && filters.branch,
+  );
+
+  const totals = reportRows.reduce(
+    (summary, row) => ({
+      rate: summary.rate + row.rate,
+      approvedAmount: summary.approvedAmount + row.approvedAmount,
+      claimedByBo: summary.claimedByBo + row.claimedByBo,
+      paidByHo: summary.paidByHo + row.paidByHo,
+      pending: summary.pending + row.pending,
+    }),
+    {
+      rate: 0,
+      approvedAmount: 0,
+      claimedByBo: 0,
+      paidByHo: 0,
+      pending: 0,
+    },
+  );
+
+  const formatNumber = (value) =>
+    new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+
+  const handleFilterChange = (key, value) => {
+    setFilters((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  };
+
+  const handleDownload = () => {
+    const headerRows = [
+      [`Season ${filters.season}`],
+      [`Commodity- ${filters.commodity}`],
+      [`State- ${filters.state}`],
+      [`Procured Quantity by ${filters.branch} in qt- 2842583`],
+      [],
+    ];
+
+    const columns = [
+      'Particulars',
+      'Incidental rate as approved by the DA & FW in qt.',
+      'Amount as per the Approval DA & FW',
+      'Incidental Amount Claimed by BO',
+      'Incidental Amount Paid by HO',
+      'Incidental Amount Pending',
+      'Remark',
+    ];
+
+    const bodyRows = reportRows.map((row) => [
+      row.particular,
+      row.rate,
+      row.approvedAmount,
+      row.claimedByBo,
+      row.paidByHo,
+      row.pending,
+      row.remark,
+    ]);
+
+    bodyRows.push([
+      'Total',
+      totals.rate,
+      totals.approvedAmount,
+      totals.claimedByBo,
+      totals.paidByHo,
+      totals.pending,
+      '',
+    ]);
+
+    const csvRows = [...headerRows, columns, ...bodyRows]
+      .map((row) =>
+        row
+          .map((cell) => `"${String(cell ?? '').replaceAll('"', '""')}"`)
+          .join(','),
+      )
+      .join('\n');
+
+    const blob = new Blob([csvRows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'incidental-reports-prototype.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <section className="page-shell reports-shell">
+      <div className="page-header block-header">
+        <div>
+          <p className="page-kicker">Stock Blocking</p>
+          <h2>Reports</h2>
+          <p className="page-subtitle">
+            Prototype report layout for incidental statements with filterable
+            headers and an Excel-friendly download.
+          </p>
+        </div>
+        <div className="page-actions">
+          <button
+            type="button"
+            className="page-button success"
+            onClick={handleDownload}
+          >
+            Download Excel
+          </button>
+        </div>
+      </div>
+
+      <div className="filter-row reports-filter-row">
+        <div className="filter-item">
+          <label htmlFor="report-season">Season</label>
+          <select
+            id="report-season"
+            value={filters.season}
+            onChange={(event) =>
+              handleFilterChange('season', event.target.value)
+            }
+          >
+            {reportOptions.season.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-item">
+          <label htmlFor="report-commodity">Commodity</label>
+          <select
+            id="report-commodity"
+            value={filters.commodity}
+            onChange={(event) =>
+              handleFilterChange('commodity', event.target.value)
+            }
+          >
+            {reportOptions.commodity.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-item">
+          <label htmlFor="report-branch">Branch</label>
+          <select
+            id="report-branch"
+            value={filters.branch}
+            onChange={(event) =>
+              handleFilterChange('branch', event.target.value)
+            }
+          >
+            {reportOptions.branch.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-item">
+          <label htmlFor="report-state">State</label>
+          <select
+            id="report-state"
+            value={filters.state}
+            onChange={(event) =>
+              handleFilterChange('state', event.target.value)
+            }
+          >
+            {reportOptions.state.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {isReadyForReport ? (
+        <div className="results-card report-card">
+          <div className="table-scroll">
+            <table className="report-table">
+              <tbody>
+                <tr>
+                  <th colSpan="7" className="report-meta">
+                    Season {filters.season}
+                  </th>
+                </tr>
+                <tr>
+                  <th colSpan="7" className="report-meta">
+                    Commodity- {filters.commodity}
+                  </th>
+                </tr>
+                <tr>
+                  <th colSpan="7" className="report-meta">
+                    State- {filters.state}
+                  </th>
+                </tr>
+                <tr>
+                  <th colSpan="7" className="report-meta">
+                    Procured Quantity by {filters.branch} in qt- 2842583
+                  </th>
+                </tr>
+                <tr className="report-column-row">
+                  <th>Particulars</th>
+                  <th>Incidental rate as approved by the DA & FW in qt.</th>
+                  <th>Amount as per the Approval DA & FW</th>
+                  <th>Incidental Amount Claimed by BO</th>
+                  <th>Incidental Amount Paid by HO</th>
+                  <th>Incidental Amount Pending</th>
+                  <th>Remark</th>
+                </tr>
+                {reportRows.map((row) => (
+                  <tr key={row.particular}>
+                    <th className="report-particular">{row.particular}</th>
+                    <td>{formatNumber(row.rate)}</td>
+                    <td>{formatNumber(row.approvedAmount)}</td>
+                    <td>{formatNumber(row.claimedByBo)}</td>
+                    <td>{formatNumber(row.paidByHo)}</td>
+                    <td>{formatNumber(row.pending)}</td>
+                    <td>{row.remark}</td>
+                  </tr>
+                ))}
+                <tr className="report-total-row">
+                  <th className="report-particular">Total</th>
+                  <td>{formatNumber(totals.rate)}</td>
+                  <td>{formatNumber(totals.approvedAmount)}</td>
+                  <td>{formatNumber(totals.claimedByBo)}</td>
+                  <td>{formatNumber(totals.paidByHo)}</td>
+                  <td>{formatNumber(totals.pending)}</td>
+                  <td />
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="empty-state">
+          <h3>Select all report filters to continue</h3>
+          <p>
+            Choose season, commodity, branch, and state to reveal the incidental
+            report table.
           </p>
         </div>
       )}
@@ -599,6 +1005,7 @@ function App() {
         ) : null}
 
         {activePage === 'store-incidental' ? <StoreIncidentalPage /> : null}
+        {activePage === 'reports' ? <ReportsPage /> : null}
       </main>
     </div>
   );
