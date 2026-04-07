@@ -60,11 +60,6 @@ const options = {
   ],
 };
 
-const derivedValues = {
-  approvedRate: 'Rs. 24.00 / Qtl',
-  approvalAmount: 'Rs. 31,200.00',
-};
-
 function Sidebar({ activePage, setActivePage }) {
   const [mastersOpen, setMastersOpen] = useState(true);
   const [stockBlockingOpen, setStockBlockingOpen] = useState(true);
@@ -203,31 +198,99 @@ function MasterPage({
 }
 
 function StoreIncidentalPage() {
+  const [activeRole, setActiveRole] = useState('branch');
   const [formValues, setFormValues] = useState({
     season: '',
     commodity: '',
     state: '',
-    particular: '',
     procurementQuality: '',
-    claimedByBo: '',
-    paidByHo: '',
-    pendingAmount: '',
-    remark: '',
   });
+  const [detailRows, setDetailRows] = useState([
+    {
+      id: 1,
+      particular: '',
+      claimedByBo: '',
+      paidByHo: '',
+      pendingAmount: '',
+      remark: '',
+      attachmentName: '',
+    },
+  ]);
 
   const isReadyForAmounts = Boolean(
     formValues.season &&
     formValues.commodity &&
     formValues.state &&
-    formValues.particular &&
     formValues.procurementQuality.trim(),
   );
+  const isBranchUser = activeRole === 'branch';
+  const isHoUser = activeRole === 'ho';
+
+  const parseRate = (rate) => {
+    const matchedValue = rate.match(/(\d+(?:\.\d+)?)/);
+    return matchedValue ? Number.parseFloat(matchedValue[1]) : 0;
+  };
+
+  const formatCurrency = (value) =>
+    `Rs. ${value.toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+
+  const getApprovedRate = (particular) => {
+    const matchedRow = incidentalRows.find((row) => row.particular === particular);
+    return matchedRow?.rate ?? '--';
+  };
+
+  const getApprovalAmount = (particular) => {
+    if (!particular) return 'Rs. 0.00';
+
+    const procurementQuantity = Number.parseFloat(formValues.procurementQuality);
+    if (!Number.isFinite(procurementQuantity)) return 'Rs. 0.00';
+
+    return formatCurrency(parseRate(getApprovedRate(particular)) * procurementQuantity);
+  };
 
   const handleChange = (key, value) => {
     setFormValues((current) => ({
       ...current,
       [key]: value,
     }));
+  };
+
+  const handleRowChange = (id, key, value) => {
+    setDetailRows((current) =>
+      current.map((row) => (row.id === id ? { ...row, [key]: value } : row)),
+    );
+  };
+
+  const handleAddRow = () => {
+    setDetailRows((current) => [
+      ...current,
+        {
+          id: current.length ? Math.max(...current.map((row) => row.id)) + 1 : 1,
+          particular: '',
+          claimedByBo: '',
+          paidByHo: '',
+          pendingAmount: '',
+          remark: '',
+          attachmentName: '',
+        },
+      ]);
+  };
+
+  const handleFileChange = (id, file) => {
+    setDetailRows((current) =>
+      current.map((row) =>
+        row.id === id ? { ...row, attachmentName: file?.name ?? '' } : row,
+      ),
+    );
+  };
+
+  const handleRemoveRow = (id) => {
+    setDetailRows((current) =>
+      current.length === 1 ? current : current.filter((row) => row.id !== id),
+    );
   };
 
   return (
@@ -237,10 +300,25 @@ function StoreIncidentalPage() {
           <p className="page-kicker">Stock Blocking</p>
           <h2>Store Incidental</h2>
           <p className="page-subtitle">
-            Fill the core selection fields first. Once complete, the approved
-            and user-entry incidental values appear below, following the stock
-            blocking workflow style.
+            Fill the core selection fields first. Once complete, add one or
+            more incidental detail rows with particulars and row-wise values.
           </p>
+        </div>
+        <div className="role-switcher" aria-label="User role switcher">
+          <button
+            type="button"
+            className={`role-switch-button ${isBranchUser ? 'active' : ''}`}
+            onClick={() => setActiveRole('branch')}
+          >
+            Branch View
+          </button>
+          <button
+            type="button"
+            className={`role-switch-button ${isHoUser ? 'active' : ''}`}
+            onClick={() => setActiveRole('ho')}
+          >
+            HO View
+          </button>
         </div>
       </div>
 
@@ -294,33 +372,17 @@ function StoreIncidentalPage() {
         </div>
 
         <div className="filter-item">
-          <label htmlFor="particular">Particulars</label>
-          <select
-            id="particular"
-            value={formValues.particular}
-            onChange={(event) => handleChange('particular', event.target.value)}
-          >
-            <option value="">Select Particulars</option>
-            {options.particular.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+          <label htmlFor="procurementQuality">Procurement Quantity</label>
+          <input
+            id="procurementQuality"
+            type="text"
+            value={formValues.procurementQuality}
+            onChange={(event) =>
+              handleChange('procurementQuality', event.target.value)
+            }
+            placeholder="Enter procurement quantity"
+          />
         </div>
-      </div>
-
-      <div className="procurement-card">
-        <label htmlFor="procurementQuality">Procurement Quantity</label>
-        <input
-          id="procurementQuality"
-          type="text"
-          value={formValues.procurementQuality}
-          onChange={(event) =>
-            handleChange('procurementQuality', event.target.value)
-          }
-          placeholder="Enter procurement quantity"
-        />
       </div>
 
       {isReadyForAmounts ? (
@@ -329,82 +391,155 @@ function StoreIncidentalPage() {
             <div>
               <h3>Incidental Details</h3>
               <p>
-                Approved values are prefilled from the master setup, while the
-                remaining fields are available for user input.
+                {isBranchUser
+                  ? 'Branch users can capture particulars, approved amount context, claim details, remarks, and attachments.'
+                  : 'HO users can review the branch-submitted details and fill only the paid and pending amounts.'}
               </p>
             </div>
-            <div className="results-chip">Selection Complete</div>
+            <div className="results-actions-inline">
+              <button
+                type="button"
+                className="page-button success"
+                onClick={handleAddRow}
+                disabled={isHoUser}
+              >
+                + Add Row
+              </button>
+            </div>
           </div>
 
-          <div className="details-grid">
-            <div className="detail-field prefilled">
-              <label>Incidental Rate as approved by the DA & FW in qt.</label>
-              <input value={derivedValues.approvedRate} readOnly />
-            </div>
-
-            <div className="detail-field prefilled">
-              <label>Amount as per the Approval DA & FW</label>
-              <input value={derivedValues.approvalAmount} readOnly />
-              <small>Incidental rate x procurement quantity</small>
-            </div>
-
-            <div className="detail-field">
-              <label>Incidental Amount Claimed by BO</label>
-              <input
-                value={formValues.claimedByBo}
-                onChange={(event) =>
-                  handleChange('claimedByBo', event.target.value)
-                }
-                placeholder="Enter BO claimed amount"
-              />
-            </div>
-
-            <div className="detail-field">
-              <label>Incidental Amount Paid by HO</label>
-              <input
-                value={formValues.paidByHo}
-                onChange={(event) =>
-                  handleChange('paidByHo', event.target.value)
-                }
-                placeholder="Enter HO paid amount"
-              />
-            </div>
-
-            <div className="detail-field">
-              <label>Incidental Amount Pending</label>
-              <input
-                value={formValues.pendingAmount}
-                onChange={(event) =>
-                  handleChange('pendingAmount', event.target.value)
-                }
-                placeholder="Enter pending amount"
-              />
-            </div>
-
-            <div className="detail-field full-width">
-              <label>Remark</label>
-              <textarea
-                value={formValues.remark}
-                onChange={(event) => handleChange('remark', event.target.value)}
-                placeholder="Add remark"
-                rows="4"
-              />
+          <div className="table-card details-table-card">
+            <div className="table-scroll">
+              <table className="management-table incidental-detail-table">
+                <thead>
+                  <tr>
+                    <th>Particulars</th>
+                    <th>Incidental Rate as approved by the DA & FW in qt.</th>
+                    <th>Amount as per the Approval DA & FW</th>
+                    <th>Incidental Amount Claimed by BO</th>
+                    {isHoUser ? <th>Incidental Amount Paid by HO</th> : null}
+                    {isHoUser ? <th>Incidental Amount Pending</th> : null}
+                    <th>Remark</th>
+                    <th>File Upload</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detailRows.map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <select
+                          value={row.particular}
+                          disabled={isHoUser}
+                          onChange={(event) =>
+                            handleRowChange(row.id, 'particular', event.target.value)
+                          }
+                        >
+                          <option value="">Select Particulars</option>
+                          {options.particular.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>{getApprovedRate(row.particular)}</td>
+                      <td>{getApprovalAmount(row.particular)}</td>
+                      <td>
+                        <input
+                          value={row.claimedByBo}
+                          readOnly={isHoUser}
+                          onChange={(event) =>
+                            handleRowChange(row.id, 'claimedByBo', event.target.value)
+                          }
+                          placeholder="Enter BO claimed amount"
+                        />
+                      </td>
+                      {isHoUser ? (
+                        <td>
+                          <input
+                            value={row.paidByHo}
+                            onChange={(event) =>
+                              handleRowChange(row.id, 'paidByHo', event.target.value)
+                            }
+                            placeholder="Enter HO paid amount"
+                          />
+                        </td>
+                      ) : null}
+                      {isHoUser ? (
+                        <td>
+                          <input
+                            value={row.pendingAmount}
+                            onChange={(event) =>
+                              handleRowChange(row.id, 'pendingAmount', event.target.value)
+                            }
+                            placeholder="Enter pending amount"
+                          />
+                        </td>
+                      ) : null}
+                      <td>
+                        <textarea
+                          value={row.remark}
+                          readOnly={isHoUser}
+                          onChange={(event) =>
+                            handleRowChange(row.id, 'remark', event.target.value)
+                          }
+                          placeholder="Add remark"
+                          rows="3"
+                        />
+                      </td>
+                      <td>
+                        <div className="file-upload-cell">
+                          <input
+                            type="file"
+                            id={`attachment-${row.id}`}
+                            className="file-upload-input"
+                            disabled={isHoUser}
+                            onChange={(event) =>
+                              handleFileChange(row.id, event.target.files?.[0])
+                            }
+                          />
+                          <label
+                            htmlFor={`attachment-${row.id}`}
+                            className="file-upload-button"
+                          >
+                            Choose File
+                          </label>
+                          <span className="file-upload-name">
+                            {row.attachmentName || 'No file chosen'}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="table-action-button"
+                          onClick={() => handleRemoveRow(row.id)}
+                          disabled={isHoUser || detailRows.length === 1}
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 
           <div className="results-actions">
             <button type="button" className="page-button primary">
-              Save Draft
+              {isBranchUser ? 'Submit as Branch' : 'Submit as HO'}
             </button>
           </div>
         </div>
       ) : (
         <div className="empty-state">
-          {/* <h3>Complete the top fields to continue</h3>
+          <h3>Complete the top fields to continue</h3>
           <p>
-            Select season, commodity, state, particulars, and enter procurement quality to
-            reveal the incidental detail section.
-          </p> */}
+            Select season, commodity, state, and enter procurement quantity to
+            reveal the incidental details table.
+          </p>
         </div>
       )}
     </section>
