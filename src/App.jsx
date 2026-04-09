@@ -29,21 +29,25 @@ const mspRows = [
 const incidentalRows = [
   {
     particular: 'Transportation',
+    commodity: 'Paddy (Common)',
     season: 'Kharif 2025-26',
     rate: 'Rs. 24.00 / Qtl',
   },
   {
     particular: 'Cleaning and drying',
+    commodity: 'Paddy (Common)',
     season: 'Kharif 2025-26',
     rate: 'Rs. 18.50 / Qtl',
   },
   {
     particular: 'Handling and stacking',
+    commodity: 'Wheat',
     season: 'Rabi 2025-26',
     rate: 'Rs. 16.75 / Qtl',
   },
   {
     particular: 'Watch and ward',
+    commodity: 'Mustard',
     season: 'Rabi 2025-26',
     rate: 'Rs. 11.20 / Qtl',
   },
@@ -340,7 +344,10 @@ function StoreIncidentalPage() {
 
   const getApprovedRate = (particular) => {
     const matchedRow = incidentalRows.find(
-      (row) => row.particular === particular,
+      (row) =>
+        row.particular === particular &&
+        row.season === formValues.season &&
+        row.commodity === formValues.commodity,
     );
     return matchedRow?.rate ?? '--';
   };
@@ -996,11 +1003,12 @@ function App() {
         {activePage === 'incidental' ? (
           <MasterPage
             title="Incidental Rate"
-            subtitle="Standalone incidental master page with particulars, season, and approved rate."
+            subtitle="Standalone incidental master page with particulars, commodity, season, and approved rate."
             searchPlaceholder="Search incidental records..."
             addLabel="+ Add New"
             columns={[
               { key: 'particular', label: 'Particulars' },
+              { key: 'commodity', label: 'Commodity' },
               { key: 'season', label: 'Season' },
               { key: 'rate', label: 'Rate' },
             ]}
